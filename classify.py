@@ -4,10 +4,10 @@ import torchvision.transforms as transforms
 from PIL import Image
 import os
 
-# Load Trained Model
-checkpoint = torch.load("saved_models/emotion_cnn.pth", map_location=torch.device('cpu'))
-classes = checkpoint['classes']
+# Define emotion classes manually
+classes = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
+# Define CNN model (must match training architecture)
 class EmotionCNN(nn.Module):
     def __init__(self, num_classes=len(classes)):
         super(EmotionCNN, self).__init__()
@@ -42,11 +42,19 @@ class EmotionCNN(nn.Module):
         x = self.fc2(x)
         return x
 
+# Load model weights
 model = EmotionCNN()
-model.load_state_dict(checkpoint['model_state_dict'])
+checkpoint = torch.load("best_emotion_model.pth", map_location=torch.device('cpu'))
+
+# handle both direct state_dict and dict-style checkpoints
+if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+    model.load_state_dict(checkpoint['model_state_dict'])
+else:
+    model.load_state_dict(checkpoint)
+
 model.eval()
 
-# Define Transform
+# Define image preprocessing
 transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((48, 48)),
@@ -54,18 +62,20 @@ transform = transforms.Compose([
     transforms.Normalize((0.5,), (0.5,))
 ])
 
-# User Input
+# Ask for image path
 image_path = input("Enter image path: ").strip()
 if not os.path.exists(image_path):
-    print("Image not found!")
+    print("❌ Image not found!")
     exit()
 
+# Load and preprocess image
 image = Image.open(image_path)
-image_tensor = transform(image).unsqueeze(0)  # (1, 1, 48, 48)
+image_tensor = transform(image).unsqueeze(0)  # shape: (1, 1, 48, 48)
 
+# Predict
 with torch.no_grad():
     outputs = model(image_tensor)
     _, predicted = torch.max(outputs, 1)
     emotion = classes[predicted.item()]
 
-print(f"\nPredicted Emotion: {emotion}")
+print(f"\n✅ Predicted Emotion: {emotion}")
