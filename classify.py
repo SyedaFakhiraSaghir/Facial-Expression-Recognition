@@ -4,9 +4,7 @@ import torchvision.transforms as transforms
 from PIL import Image
 import os
 
-# ------------------------------------------
 # Load Trained Model
-# ------------------------------------------
 checkpoint = torch.load("saved_models/emotion_cnn.pth", map_location=torch.device('cpu'))
 classes = checkpoint['classes']
 
@@ -48,9 +46,7 @@ model = EmotionCNN()
 model.load_state_dict(checkpoint['model_state_dict'])
 model.eval()
 
-# ------------------------------------------
 # Define Transform
-# ------------------------------------------
 transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((48, 48)),
@@ -58,9 +54,7 @@ transform = transforms.Compose([
     transforms.Normalize((0.5,), (0.5,))
 ])
 
-# ------------------------------------------
 # User Input
-# ------------------------------------------
 image_path = input("Enter image path: ").strip()
 if not os.path.exists(image_path):
     print("Image not found!")
